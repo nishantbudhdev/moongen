@@ -4,6 +4,7 @@ local device = require "device"
 local ts     = require "timestamping"
 local stats  = require "stats"
 local hist   = require "histogram"
+local proto  = require "proto.proto"
 
 local PKT_SIZE	= 60
 local ETH_DST	= "3c:fd:fe:ad:84:a5"
@@ -38,28 +39,29 @@ function master(args)
 	end 
 	-- eREC:getTxQueue(0):setRate(args.rate)
 	mg.startTask("loadSlave", eRE:getTxQueue(0), args.size)
-	if eRE ~= eREC then
-		mg.startTask("timeSlave", eREC:getTxQueue(1), eREC:getRxQueue(1), args.size, args.file)
-	end
-	stats.startStatsTask{eRE, eREC}
+	-- if eRE ~= eREC then
+	--	mg.startTask("timerSlave", eREC:getTxQueue(1), eREC:getRxQueue(1), args.size, args.file)
+	-- end
+	stats.startStatsTask{eRE}
 	-- mg.startSharedTask("timerSlave", eRE:getTxQueue(1), eREC:getRxQueue(1), args.file)
 	mg.waitForTasks()
 end
 
 local function fillEcpriPacket(buf, len)
+--	print(tostring(len))
 	buf:getEcpriPacket():fill{
-		ethSrc = ETH_SRC,
+		ethSrc = queue,
 		ethDst = ETH_DST,
-		ethType = proto.eth,
-		msg_type = proto.ecpri.TYPE_IQ,
-		payloadLength = len
+		ethType = proto.eth.TYPE_ECRPI,
+		payloadLength = len,
 	}
 end
 
 
 function loadSlave(queue, size)
+	print(tostring(size))
 	local mem = memory.createMemPool(function(buf)
-		fullEcpriPacket(buf, size)
+		fillEcpriPacket(buf, size)
 	end)
 	local bufs = mem:bufArray()
 	while mg.running() do
