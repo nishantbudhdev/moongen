@@ -53,6 +53,7 @@ local function fillEcpriPacket(buf, len)
 		ethSrc = queue,
 		ethDst = ETH_DST,
 		ethType = proto.eth.TYPE_ECRPI,
+		msgType = proto.ecpri.TYPE_IQ,
 		payloadLength = len,
 	}
 end
